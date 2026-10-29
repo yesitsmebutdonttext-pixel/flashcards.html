@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Testing App</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #16a34a;
+            --success-hover: #15803d;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            color: var(--text);
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .stats span strong {
+            color: var(--text);
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Flashcard Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 320px;
+            cursor: pointer;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 32px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #eef2ff;
+            border-color: #c7d2fe;
+            color: #312e81;
+        }
+
+        .card-label {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .card-back .card-label {
+            color: #6366f1;
+        }
+
+        .card-content {
+            font-size: 1.5rem;
+            font-weight: 500;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 16px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-incorrect {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-incorrect:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .btn-correct {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-correct:hover {
+            background-color: var(--success-hover);
+        }
+
+        .btn-flip {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-flip:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Completion Screen */
+        .completion-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            gap: 20px;
+        }
+
+        .completion-screen h2 {
+            font-size: 1.75rem;
+        }
+
+        .completion-screen p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Main App Interface -->
+        <div id="app-view">
+            <header>
+                <h1>Flashcard Test</h1>
+                <div class="stats">
+                    <span>Card: <strong id="current-card">1</strong>/<span id="total-cards">5</span></span>
+                    <span>Score: <strong id="score-count" style="color: var(--success);">0</strong></span>
+                </div>
+            </header>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="flashcard-container" id="card-container" onclick="flipCard()">
+                <div class="flashcard" id="flashcard">
+                    <div class="card-face card-front">
+                        <span class="card-label">Question</span>
+                        <div class="card-content" id="front-text">Loading...</div>
+                        <span class="hint">Click or press Space to flip</span>
+                    </div>
+                    <div class="card-face card-back">
+                        <span class="card-label">Answer</span>
+                        <div class="card-content" id="back-text">Loading...</div>
+                        <span class="hint">Rate below</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions" id="flip-action-wrapper">
+                <button class="btn-flip" onclick="flipCard()">Flip Card (Space)</button>
+            </div>
+
+            <div class="actions hidden" id="rating-action-wrapper">
+                <button class="btn-incorrect" onclick="nextCard(false)">Incorrect (←)</button>
+                <button class="btn-correct" onclick="nextCard(true)">Correct (→)</button>
+            </div>
+        </div>
+
+        <!-- Completion Screen -->
+        <div class="completion-screen" id="completion-screen">
+            <h2>🎉 Test Completed!</h2>
+            <p>You got <strong id="final-score">0</strong> out of <span id="final-total">0</span> correct.</p>
+            <button class="btn-flip" onclick="restartTest()">Restart Test</button>
+        </div>
+    </div>
+
+    <script>
+        // --- ADD OR EDIT YOUR FLASHCARDS HERE ---
+        const flashcardsData = [
+            { front: "What does HTML stand for?", back: "HyperText Markup Language" },
+            { front: "What is the primary function of CSS?", back: "Styling and layout of web pages" },
+            { front: "What does DOM stand for?", back: "Document Object Model" },
+            { front: "What is a closure in JavaScript?", back: "A function bundled together with references to its lexical environment." },
+            { front: "What port does HTTP default to?", back: "Port 80" }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let isFlipped = false;
+
+        const flashcardEl = document.getElementById("flashcard");
+        const frontTextEl = document.getElementById("front-text");
+        const backTextEl = document.getElementById("back-text");
+        const currentCardEl = document.getElementById("current-card");
+        const totalCardsEl = document.getElementById("total-cards");
+        const scoreCountEl = document.getElementById("score-count");
+        const progressBarEl = document.getElementById("progress-bar");
+        
+        const flipActionWrapper = document.getElementById("flip-action-wrapper");
+        const ratingActionWrapper = document.getElementById("rating-action-wrapper");
+        const appView = document.getElementById("app-view");
+        const completionScreen = document.getElementById("completion-screen");
+
+        function initTest() {
+            totalCardsEl.textContent = flashcardsData.length;
+            loadCard();
+        }
+
+        function loadCard() {
+            isFlipped = false;
+            flashcardEl.classList.remove("flipped");
+            
+            frontTextEl.textContent = flashcardsData[currentIndex].front;
+            backTextEl.textContent = flashcardsData[currentIndex].back;
+            
+            currentCardEl.textContent = currentIndex + 1;
+            scoreCountEl.textContent = score;
+            
+            // Update progress bar
+            const progress = (currentIndex / flashcardsData.length) * 100;
+            progressBarEl.style.width = `${progress}%`;
+
+            // Reset action buttons visibility
+            flipActionWrapper.classList.remove("hidden");
+            ratingActionWrapper.classList.add("hidden");
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                flashcardEl.classList.add("flipped");
+                flipActionWrapper.classList.add("hidden");
+                ratingActionWrapper.classList.remove("hidden");
+            } else {
+                flashcardEl.classList.remove("flipped");
+                flipActionWrapper.classList.remove("hidden");
+                ratingActionWrapper.classList.add("hidden");
+            }
+        }
+
+        function nextCard(isCorrect) {
+            if (isCorrect) {
+                score++;
+            }
+            
+            currentIndex++;
+
+            if (currentIndex < flashcardsData.length) {
+                loadCard();
+            } else {
+                showCompletion();
+            }
+        }
+
+        function showCompletion() {
+            appView.classList.add("hidden");
+            completionScreen.style.display = "flex";
+            document.getElementById("final-score").textContent = score;
+            document.getElementById("final-total").textContent = flashcardsData.length;
+        }
+
+        function restartTest() {
+            currentIndex = 0;
+            score = 0;
+            appView.classList.remove("hidden");
+            completionScreen.style.display = "none";
+            initTest();
+        }
+
+        // Keyboard Shortcuts Support
+        document.addEventListener("keydown", (e) => {
+            if (completionScreen.style.display === "flex") return;
+
+            if (e.code === "Space") {
+                e.preventDefault();
+                flipCard();
+            } else if (isFlipped) {
+                if (e.code === "ArrowLeft") {
+                    e.preventDefault();
+                    nextCard(false); // Incorrect
+                } else if (e.code === "ArrowRight") {
+                    e.preventDefault();
+                    nextCard(true); // Correct
+                }
+            }
+        });
+
+        // Initialize on load
+        initTest();
+    </script>
+</body>
+</html>
